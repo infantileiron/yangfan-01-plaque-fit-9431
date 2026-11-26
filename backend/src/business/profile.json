@@ -1,0 +1,33 @@
+{
+  "title": "镭页展陈·双语铭牌溢出预审",
+  "subtitle": "按实际排版空间和历史校样筛出需人工重排的双语展品铭牌。",
+  "team": "镭页展陈印前组 · 7 人",
+  "workflow": "译审交稿后，印前员从排版软件逐一打印 1:1 纸样。固定框宽和字高常由不同模板继承，人工按新翻译列表全量复测。",
+  "pain_points": ["同名版式有 13 类，历史溢出率差别大，长尾类别资料稀少。", "中文字数与参考语字数无法直接比较实际可用行宽。", "陌生语言组合常被当成普通样跳过，临到输出才补校。"],
+  "upstream": "输入双语译审清单的纸样参数、版式编号和历史实际溢出结果。",
+  "downstream": "签发的重排与加校名单交给印前拼版员，最终依实际纸样裁定。",
+  "labels": {"datasets": "校样底稿", "runs": "预审计算", "results": "溢出清单", "handoff": "拼版交接", "input": "校样批次", "action": "重排与纸样复核顺序"},
+  "algorithm": "留一平滑目标编码 + 逻辑回归",
+  "method": "仅在训练纸样上拟合版式与参考语组合的平滑目标统计。训练用留一编码、验证和待校应用完整训练映射，未知类别回退训练先验。两版模型均按几何占位率解释，在独立留出纸样按 Brier 分数择优。设置重排概率阈值；新组合即使概率低仍须补纸样。双类不足或字段缺失时终止计算。",
+  "seed_name": "镭页_常设展铭牌_2026-11-25.csv",
+  "scenario": ["08:35 译审交出镭页_常设展铭牌_2026-11-25.csv。", "08:45 对照样本 192 条训练、48 条独立留出和 8 条待校。", "09:05 分析员以 0.60 概率阈值建预审计算单。", "09:10 核对几何基准和类别编码模型，查看 Brier 对比。", "09:15 铭牌 LY-P01 的高占位版进入重排，LY-P08 的新语言组合必须补纸样。", "09:30 复核员签发 LY-P01，导出仅含已签审记录的拼版 CSV。", "10:00 拼版员按待校意见做 1:1 样张，保留预测与纸样两套记录。"],
+  "columns": [
+    {"key": "sample_id", "label": "纸样", "type": "text"},
+    {"key": "split", "label": "数据分组", "type": "text", "choices": ["训练", "留出", "待校"]},
+    {"key": "template", "label": "版式编号", "type": "text"},
+    {"key": "lang_pair", "label": "参考语组合", "type": "text"},
+    {"key": "width_mm", "label": "单行可排宽 mm", "type": "number", "min": 20, "max": 500},
+    {"key": "lines", "label": "预留行数", "type": "number", "min": 1, "max": 15},
+    {"key": "ink_mm", "label": "译文累计占宽 mm", "type": "number", "min": 1, "max": 6000},
+    {"key": "overflow", "label": "纸样实测溢出", "type": "text", "optional": true, "choices": ["是", "否"]}
+  ],
+  "parameter": {"key": "risk_cutoff", "label": "重排概率阈值", "default": 0.6, "min": 0.3, "max": 0.9, "step": 0.01,
+    "description": "概率达到阈值进入重排队列。首次出现的版式或参考语仍需补纸样。"},
+  "result_columns": [
+    {"key": "sample_id", "label": "纸样"}, {"key": "template", "label": "版式 / 参考语"},
+    {"key": "fill", "label": "估测占位 %"}, {"key": "probability", "label": "溢出概率 %"},
+    {"key": "decision", "label": "印前处置"}, {"key": "evidence", "label": "依据"}
+  ],
+  "chart": {"key": "probability", "label": "待校纸样的溢出概率（%）"},
+  "theme": {"display": "Noto Serif SC", "body": "Noto Sans SC", "hue": 65, "chroma": 0.115, "dark": false, "layout": "split"}
+}

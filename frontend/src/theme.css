@@ -1,0 +1,19 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;700&family=Noto+Serif+SC:wght@400;600;700&display=swap");
+:root {
+  color-scheme: light;
+  --font-display: "Noto Serif SC";
+  --font-body: "Noto Sans SC";
+  --radius: 0;
+  --gutter: clamp(1.05rem, 3vw, 3.5rem);
+  --canvas: oklch(96% 0.018 65);
+  --paper: oklch(98% 0.009 65);
+  --side: oklch(92% 0.029 65);
+  --ink: oklch(25% 0.037 65);
+  --muted: oklch(43% 0.043 65);
+  --line: oklch(81% 0.04 65);
+  --accent: oklch(44% 0.115 65);
+  --accent-ink: oklch(37% 0.115 65);
+  --on-accent: oklch(98% 0.011 65);
+  --table-alt: oklch(96% 0.012 65);
+  --error: oklch(42% 0.15 25);
+}
