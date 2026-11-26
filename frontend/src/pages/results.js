@@ -3,6 +3,7 @@ import { resultChart } from '../components/chart.js';
 import { empty, exportButton, heading } from '../components/common/heading.js';
 import { status } from '../components/common/status.js';
 import { table } from '../components/common/table.js';
+import { bindForm, notice } from '../hooks/forms.js';
 import { escapeHtml as e, shortId, timeText } from '../utils/format.js';
 
 export async function resultsPage(profile, account, id) {
@@ -17,8 +18,15 @@ export async function resultsPage(profile, account, id) {
   const intro = heading(profile.labels.results, profile.labels.action, actions) +
     `<div class="result-pick"><label>计算单<select id="choose-result">${selector}</select></label>
     ${status(run.status)}<span class="muted">${e(timeText(run.created_at))}</span></div>`;
-  const mount = root => {
+  const mount = (root, refresh) => {
     root.querySelector('#choose-result').onchange = event => { location.hash = '#results/' + event.target.value; };
+    bindForm(root, 'start-form', async data => {
+      const samples = data.getAll('samples');
+      if (!samples.length) throw new Error('请选择已开打的纸样。');
+      await api.start(run.id, samples);
+      notice('已记录开打纸样，后续插单会保留其工时。');
+      refresh();
+    });
   };
   if (!run.result) {
     return {
@@ -30,16 +38,36 @@ export async function resultsPage(profile, account, id) {
     };
   }
   const result = run.result;
+  const plan = result.plan || {};
+  const missing = plan.missing_groups || [];
+  const shiftPanel = `
+    <dl class="meta"><dt>本班工时</dt><dd>${e(plan.shift_minutes)} 分钟</dd>
+    <dt>已排耗时</dt><dd>${e(plan.scheduled_minutes)} 分钟</dd>
+    <dt>闲置</dt><dd>${e(plan.idle_minutes)} 分钟</dd>
+    <dt>本批择优</dt><dd>${e(plan.model)}</dd></dl>
+    <p class="muted">本单排入 ${plan.scheduled?.length ?? 0} 张纸样。</p>
+    ${missing.length ? `<div class="review-record"><strong>工时不足，缺这些组：</strong>
+      <ul>${missing.map(group => `<li>${e(group)}</li>`).join('')}</ul>
+      <p class="muted">可加开一班或等已完成纸样释放工时后重排。</p></div>` :
+      '<p class="muted">训练未见的版式 / 参考语组合已全部排入。</p>'}
+    <a class="button" href="#handoff/${run.id}">查看签审</a>`;
+  const startable = run.status === 'succeeded' && account.role === 'analyst';
+  const startForm = startable ? `<form id="start-form">
+      <p>勾选已经上机开打的纸样。开打后即使插单重排，这些纸样仍保留工时。</p>
+      ${table([{key:'sample_id',label:'纸样'},{key:'template',label:'版式 / 参考语'}],
+        result.rows.filter(row => row.scheduled === '是'), undefined, true)}
+      <button type="submit">记录开打</button></form>` : '';
   return {
     html: intro + `<div class="board results-board"><aside class="side">
-      <h2>本次口径</h2><dl class="meta"><dt>${e(profile.parameter.label)}</dt><dd>${e(run.parameter)}</dd>
+      <h2>本班排班</h2>${shiftPanel}
+      <h2 style="margin-top:1.4rem">本次口径</h2><dl class="meta"><dt>${e(profile.parameter.label)}</dt><dd>${e(run.parameter)}</dd>
       <dt>数据版本</dt><dd><a href="#datasets/${run.dataset_id}">${shortId(run.dataset_id)}</a></dd>
       </dl><p class="muted">${e(profile.downstream)}</p>
-      <a class="button" href="#handoff/${run.id}">查看签审</a>
       </aside><section class="work">
       <h2>${e(result.summary)}</h2>
       <dl class="metrics">${result.metrics.map(metric => `<div><dt>${e(metric.label)}</dt><dd>${e(metric.value)}</dd></div>`).join('')}</dl>
       ${resultChart(result.rows, profile.chart)}
+      ${startForm}
       <h3>${e(profile.labels.action)}</h3>
       ${table(profile.result_columns, result.rows)}
       <details class="details"><summary>计算说明</summary><ul>${result.notes.map(note => '<li>' + e(note) + '</li>').join('')}</ul></details>

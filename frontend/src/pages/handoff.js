@@ -15,11 +15,13 @@ export async function handoffPage(profile, account, id) {
   const selector = completed.map(item => `<option value="${item.id}" ${item.id === selected?.id ? 'selected' : ''}>${e(item.label)}</option>`).join('');
   const actions = review?.decision === 'approve' ?
     exportButton('/runs/' + run.id + '/handoff.csv', 'handoff.csv', '下载签发清单') : '';
+  const booked = run?.result?.rows.filter(row => row.scheduled === '是') || [];
   const form = run && account.role === 'reviewer' && !review ? `
     <form id="review-form">
-      <p>选择要交接的样本，再填写复核结论。暂缓可不选样本。</p>
-      ${table(profile.result_columns, run.result.rows.slice(0, 500), undefined, true)}
-      ${run.result.rows.length > 500 ? '<p>本页可签审前 500 条结果。完整计算结果可在结果页下载。</p>' : ''}
+      <p>只列出本班已排入的纸样。选择要交接的样本，再填写复核结论。暂缓可不选样本。</p>
+      ${table(profile.result_columns, booked.slice(0, 500), undefined, true)}
+      ${booked.length > 500 ? '<p>本页可签审前 500 条结果。完整计算结果可在结果页下载。</p>' : ''}
+      ${booked.length ? '' : '<p class="muted">本班没有排入任何纸样，暂无可交接样本。</p>'}
       <label>决定<select name="decision"><option value="approve">签发</option><option value="hold">暂缓</option></select></label>
       <label>复核说明<textarea name="note" minlength="2" maxlength="1000" required></textarea></label>
       <div class="form-error" data-error role="alert"></div><button type="submit">保存决定</button>

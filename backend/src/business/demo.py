@@ -4,6 +4,11 @@ TEMPLATES = [f"LY-T{index:02d}" for index in range(1, 14)]
 LANGUAGES = ["中文/英文", "中文/法文", "中文/德文", "中文/日文"]
 
 
+def estimate_minutes(width, lines, ink):
+    """Prepress minutes for one 1:1 paper sample, from its printing geometry."""
+    return float(round(3 + lines * 2 + ink / width * 1.5 + width / 50, 1))
+
+
 def demo_rows():
     rng = Random(53125)
     rows = []
@@ -28,7 +33,10 @@ def demo_rows():
 
 
 def sample(sample_id, split, template, language, width, lines, ratio, label):
+    ink = round(width * lines * ratio, 2)
     return {
         "sample_id": sample_id, "split": split, "template": template, "lang_pair": language,
-        "width_mm": width, "lines": lines, "ink_mm": round(width * lines * ratio, 2), "overflow": label,
+        "width_mm": width, "lines": lines, "ink_mm": ink, "est_minutes": estimate_minutes(width, lines, ink),
+        "overflow": label,
     }
+

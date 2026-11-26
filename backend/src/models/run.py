@@ -13,6 +13,8 @@ class Run(Base):
     dataset_id: Mapped[str] = mapped_column(ForeignKey("datasets.id"), index=True)
     label: Mapped[str] = mapped_column(String(100))
     parameter: Mapped[float]
+    shift_id: Mapped[str | None] = mapped_column(ForeignKey("shifts.id"), index=True, nullable=True)
+    request_key: Mapped[str | None] = mapped_column(String(80), unique=True, nullable=True)
     actor: Mapped[str] = mapped_column(String(160))
     status: Mapped[str] = mapped_column(String(20), default=Stage.QUEUED.value, index=True)
     result: Mapped[dict | None] = mapped_column(JSON, nullable=True)

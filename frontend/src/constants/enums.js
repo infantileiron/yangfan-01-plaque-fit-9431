@@ -3,9 +3,12 @@ export const stages = { queued: '排队中', running: '计算中', succeeded: '�
 export const decisions = { approve: '签发', hold: '暂缓' };
 export const auditActions = {
   dataset_imported: '导入数据',
+  shift_opened: '开班',
   run_queued: '提交计算',
   run_succeeded: '完成计算',
   run_failed: '计算失败',
+  samples_started: '开打纸样',
+  shift_minutes_released: '退回工时',
   review_approve: '签发交接',
   review_hold: '暂缓交接',
 };
